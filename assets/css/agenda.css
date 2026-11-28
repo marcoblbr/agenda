@@ -1,0 +1,716 @@
+/* Agenda do Marco: só disponibilidade, sem detalhes de compromissos. */
+
+:root {
+  color-scheme: light dark;
+  --bg: #f4f5f8;
+  --superficie: #ffffff;
+  --superficie-2: #f0f2f5;
+  --texto: #1c2230;
+  --texto-suave: #586173;
+  --borda: #d9dde5;
+  --linha: #e7e9ee;
+  --linha-meia: #f3f4f7;
+  --ocupado: #cfd4dc;
+  --ocupado-2: #c3c9d2;
+  --ocupado-borda: #9ba3b0;
+  --ocupado-texto: #232937;
+  --livre: #17703d;
+  --livre-fundo: #e3f3e9;
+  --livre-borda: #8cc9a4;
+  --acento: #2257d1;
+  --acento-texto: #ffffff;
+  --hoje-fundo: #f5f8ff;
+  --fds-fundo: #fafbfc;
+  --passado: rgba(108, 117, 133, 0.06);
+  --ocupado-passado: #f0f2f5;
+  --ocupado-passado-texto: #c3c8d0;
+  --fora-listra: rgba(108, 117, 133, 0.14);
+  --agora: #d23a3a;
+  /* Reunião em destaque (etiqueta NASA): azul "espaço" (o azul da NASA), texto branco. */
+  --destaque: #0b3d91;
+  --destaque-borda: #062a66;
+  --destaque-texto: #ffffff;
+  --destaque-linha: #0b3d91;
+  --destaque-suave: #e7edf8;
+  --destaque-passado: #e8eef8;
+  --destaque-passado-texto: #a7b6d2;
+  /* Nova semana: barra âmbar entre o sábado e a segunda (diferente das linhas
+     cinza da grade, do azul de hoje/destaque e do vermelho do agora). */
+  --nova-semana: #d97706;
+  --nova-semana-texto: #92400e;
+  --aviso-fundo: #fff5d9;
+  --aviso-borda: #ecd18a;
+  --aviso-texto: #5f4300;
+  --erro-fundo: #fde9e9;
+  --erro-borda: #f0b3b3;
+  --erro-texto: #861b1b;
+  --sombra: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.07);
+  --raio: 12px;
+  --altura-hora: 48px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111419;
+    --superficie: #191d24;
+    --superficie-2: #20252e;
+    --texto: #e6e9ef;
+    --texto-suave: #9ba4b4;
+    --borda: #2d333e;
+    --linha: #262b34;
+    --linha-meia: #1e222a;
+    --ocupado: #464d5a;
+    --ocupado-2: #3d4350;
+    --ocupado-borda: #6b7383;
+    --ocupado-texto: #eef0f4;
+    --livre: #6fd39a;
+    --livre-fundo: #15301f;
+    --livre-borda: #2f6b47;
+    --acento: #7aa5ff;
+    --acento-texto: #0d1526;
+    --hoje-fundo: #1a2130;
+    --fds-fundo: #161a20;
+    --passado: rgba(0, 0, 0, 0.16);
+    --ocupado-passado: #22262d;
+    --ocupado-passado-texto: #4a505b;
+    --fora-listra: rgba(255, 255, 255, 0.05);
+    --agora: #ff6b6b;
+    --destaque: #2f5fc4;
+    --destaque-borda: #8fb0ff;
+    --destaque-texto: #ffffff;
+    --destaque-linha: #8fb0ff;
+    --destaque-suave: #1a2540;
+    --destaque-passado: #1b2233;
+    --destaque-passado-texto: #3f5072;
+    --nova-semana: #f59e0b;
+    --nova-semana-texto: #fbbf24;
+    --aviso-fundo: #3a2e0d;
+    --aviso-borda: #6b5520;
+    --aviso-texto: #f3dc9a;
+    --erro-fundo: #3a1717;
+    --erro-borda: #6e2b2b;
+    --erro-texto: #ffc9c9;
+    --sombra: none;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--texto);
+  font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-wrap: anywhere;
+}
+
+[hidden] { display: none !important; }
+
+.wrap {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+.pular {
+  position: absolute; left: 16px; top: -48px;
+  background: var(--acento); color: var(--acento-texto);
+  padding: 8px 14px; border-radius: 8px; z-index: 20; text-decoration: none;
+}
+.pular:focus { top: 12px; }
+
+:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+
+/* ------------------------------------------------------------------ portão */
+/* Só o campo da senha, Mostrar e Entrar, no meio da tela. Até decifrar, é a
+   única coisa na tela (com senha salva o agenda.js pula direto para a agenda). */
+
+.portao {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px 16px;
+}
+
+.portao-caixa { width: 100%; max-width: 380px; }
+.portao-nota { margin: 0; text-align: center; color: var(--texto-suave); }
+
+.form-senha { display: flex; flex-direction: column; gap: 10px; }
+
+.senha-linha { display: flex; gap: 8px; }
+.senha-linha input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 42px;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+.senha-linha .btn { flex: 0 0 auto; min-width: 5.5em; }
+
+/* Linha de erro embaixo do Entrar, com altura reservada: a mensagem aparece
+   sem mexer no resto. */
+.senha-erro { min-height: 1.5em; margin: 0; text-align: center; color: var(--erro-texto); font-size: 0.92rem; font-weight: 600; }
+
+.btn-bloco { width: 100%; }
+.btn[aria-disabled="true"] { cursor: progress; opacity: 0.75; }
+
+.portao .erro { margin: 0; }
+
+/* ------------------------------------------------------------- cabeçalho */
+
+.topo { padding: 16px 0 2px; }
+
+.topo-linha { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.topo-linha h1 { min-width: 0; }
+
+/* Calendariozinho à esquerda do título (mesmo ícone do Contatos.app). */
+.marca { display: flex; flex-wrap: nowrap; align-items: center; gap: 9px; min-width: 0; }
+/* Título e fuso lado a lado, à direita do ícone (o fuso pequeno, na mesma linha). */
+.marca-texto { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-width: 0; }
+/* Botão de recarregar, logo à direita do título. */
+.btn.btn-recarregar { min-height: 28px; height: 28px; width: 28px; padding: 0 0 2px; border-radius: 50%; font-size: 1.15rem; line-height: 1; }
+.fuso { font-size: 0.82rem; color: var(--texto-suave); white-space: nowrap; }
+/* Etiqueta-filtro (NASA) logo depois do fuso: contorno azul desligada, azul cheio ligada. */
+.tag-filtro {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 26px; padding: 0 12px;
+  font: inherit; font-size: 0.82rem; font-weight: 700; line-height: 1;
+  white-space: nowrap;
+  color: var(--destaque-linha);
+  background: transparent;
+  border: 1.5px solid var(--destaque-linha);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.tag-filtro:hover { background: var(--destaque-suave); }
+.tag-filtro[aria-pressed="true"] { color: var(--destaque-texto); background: var(--destaque); border-color: var(--destaque); }
+.tag-filtro[aria-pressed="true"]:hover { background: var(--destaque); filter: brightness(1.12); }
+/* O título nunca quebra ("Agenda / do Marco"); se faltar espaço, quem desce é o bloco Atualizada/Sair. */
+.marca-texto h1 { white-space: nowrap; }
+.topo .marca h1 { margin: 0; }
+.marca-icone { flex: 0 0 auto; width: 30px; height: 30px; object-fit: contain; }
+.topo-linha h1:focus { outline: none; }
+
+.btn-pequeno { flex: 0 0 auto; min-height: 36px; padding: 0 14px; font-size: 0.88rem; }
+
+.topo-acoes { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 2px; margin-left: auto; }
+
+/* "Atualizada em dd/MM às HH:mm": etiqueta grande, à esquerda do Sair. */
+.tag-atualizada {
+  display: inline-flex; align-items: center;
+  min-height: 40px; padding: 0 16px;
+  border-radius: 999px;
+  background: var(--acento); color: var(--acento-texto);
+  font-size: 1.05rem; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Setas grandes e bem visíveis, num botão baixo (mesma altura do Hoje e da data). */
+.btn.btn-seta { min-width: 46px; padding: 0 10px 3px; font-size: 1.9rem; font-weight: 700; line-height: 1; }
+
+.topo h1 {
+  margin: 0 0 6px;
+  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.4rem);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.aviso {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border: 1px solid var(--aviso-borda);
+  background: var(--aviso-fundo);
+  color: var(--aviso-texto);
+  border-radius: 10px;
+  font-size: 0.92rem;
+}
+
+.erro {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--erro-borda);
+  background: var(--erro-fundo);
+  color: var(--erro-texto);
+  border-radius: var(--raio);
+}
+.erro p { margin: 0; }
+.erro .erro-titulo { font-weight: 700; margin-bottom: 4px; }
+
+/* ----------------------------------------------------------------- painéis */
+
+.painel {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 16px;
+  margin: 16px 0;
+}
+.painel:focus { outline: none; }
+
+.painel h2 { margin: 0 0 12px; font-size: 1.15rem; line-height: 1.3; }
+
+/* ----------------------------------------------------------------- botões */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 42px;
+  padding: 0 16px;
+  font: inherit; font-weight: 600;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { background: var(--superficie-2); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primario { background: var(--acento); border-color: var(--acento); color: var(--acento-texto); }
+.btn-primario:hover:not(:disabled) { background: var(--acento); filter: brightness(1.08); }
+
+/* -------------------------------------------------------------- navegação */
+
+.nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 10px; }
+.nav-botoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* Hoje, setas e o campo de data: todos com a mesma altura baixa. */
+.nav .btn { min-height: 34px; height: 34px; }
+.nav #btn-hoje { padding: 0 12px; font-size: 0.92rem; }
+.ir { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ir input {
+  display: block;
+  box-sizing: border-box;
+  width: auto;
+  min-width: 150px;
+  height: 34px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+
+/* "Semana de ..." ao lado da seta direita. */
+#semana-titulo { margin: 0 0 0 6px; font-size: 1.05rem; line-height: 1.2; }
+.ir { margin-left: auto; }
+/* Fora do celular a navegação fica numa linha só: um título de semana longo
+   ("30 de novembro a 5 de dezembro") encurta com "…" em vez de derrubar a data.
+   O campo de data não encolhe (senão passava da borda do painel entre 481 e
+   700px); quem encolhe é o título. */
+@media (min-width: 481px) {
+  .nav { flex-wrap: nowrap; }
+  .nav-botoes { flex-wrap: nowrap; min-width: 0; }
+  .ir { flex-shrink: 0; }
+  #semana-titulo { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* ---------------------------------------------------- visão semana (largo) */
+
+.grade { --col-horas: 54px; }
+
+.grade-cab, .grade-corpo {
+  display: grid;
+  grid-template-columns: var(--col-horas) repeat(6, minmax(0, 1fr)); /* segunda a sábado */
+}
+
+.grade-cab {
+  position: sticky; top: 0; z-index: 6;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borda);
+}
+
+.dia-cab {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 2px;
+  line-height: 1.2;
+  text-align: center;
+}
+.dia-cab .dsem { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-suave); }
+.dia-cab .dnum { font-weight: 700; font-variant-numeric: tabular-nums; padding: 1px 8px; border-radius: 999px; }
+.dia-cab.hoje .dsem { color: var(--acento); font-weight: 700; }
+.dia-cab.hoje .dnum { background: var(--acento); color: var(--acento-texto); }
+.dia-cab.fds .dnum, .dia-cab.passou .dnum, .dia-cab.fora .dnum { color: var(--texto-suave); font-weight: 600; }
+.dia-cab.hoje.fds .dnum { color: var(--acento-texto); }
+
+.grade-corpo { padding: 10px 0; }
+
+.horas { position: relative; height: calc(var(--horas) * var(--altura-hora)); }
+.hora {
+  position: absolute; right: 8px;
+  transform: translateY(-50%);
+  font-size: 0.72rem; color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dia-col {
+  position: relative;
+  min-width: 0;
+  height: calc(var(--horas) * var(--altura-hora));
+  border-left: 1px solid var(--linha);
+  border-bottom: 1px solid var(--linha);
+  background-color: var(--superficie);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--linha) 0, var(--linha) 1px,
+    transparent 1px, transparent calc(var(--altura-hora) / 2),
+    var(--linha-meia) calc(var(--altura-hora) / 2), var(--linha-meia) calc(var(--altura-hora) / 2 + 1px),
+    transparent calc(var(--altura-hora) / 2 + 1px), transparent var(--altura-hora)
+  );
+}
+.dia-col:last-child { border-right: 1px solid var(--linha); }
+.dia-col.fds { background-color: var(--fds-fundo); }
+.dia-col.hoje { background-color: var(--hoje-fundo); }
+
+/* Nova semana: entre o sábado e a segunda (com filtro, entre dois dias de
+   semanas diferentes) uma barra âmbar de 2px, centrada na divisa das colunas,
+   corta o cabeçalho e a grade inteira, com um triângulo apontando para baixo no
+   topo e outro, simétrico, apontando para cima embaixo. O agenda.js
+   põe 'nova-semana' no cabeçalho e na coluna do primeiro dia da semana nova.
+   Na coluna, a barra passa por cima do respiro de 10px da grade (em cima e
+   embaixo, mais a borda de baixo); no cabeçalho, pela borda de baixo dele. */
+.dia-cab.nova-semana::before,
+.dia-col.nova-semana::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  width: 2px;
+  background: var(--nova-semana);
+  z-index: 5;
+  pointer-events: none;
+}
+.dia-cab.nova-semana::before { top: 0; bottom: -1px; }
+/* A coluna tem borda esquerda de 1px: -2px a partir dela é a mesma divisa do cabeçalho. */
+.dia-col.nova-semana::before { left: -2px; top: -10px; bottom: -11px; }
+/* Triângulo de baixo, apontando para cima: espelho do de cima, no fim da barra. */
+.dia-col.nova-semana::after {
+  content: "";
+  position: absolute;
+  bottom: -11px; left: -7px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 7px solid var(--nova-semana);
+  z-index: 5;
+  pointer-events: none;
+}
+.dia-cab.nova-semana::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -6px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid var(--nova-semana);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Blocos que se sobrepõem ficam lado a lado: o agenda.js põe --pista (0 = a
+   da esquerda) e --pistas no style; sem sobreposição, a coluna inteira. */
+.bloco {
+  position: absolute;
+  left: calc(100% * var(--pista, 0) / var(--pistas, 1) + 3px);
+  width: calc(100% / var(--pistas, 1) - 6px);
+  overflow: hidden;
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  z-index: 1;
+  background: var(--ocupado);
+  border: 1px solid var(--ocupado-borda);
+  border-left-width: 3px;
+  color: var(--ocupado-texto);
+}
+.bloco .rotulo { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bloco .faixa { display: block; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.85; }
+/* Bloco baixo (até uns 40 minutos): numa linha só, o rótulo à esquerda e o
+   horário pequeno à direita ("Ocupado ...... 14:00 a 14:30"). Faltando espaço,
+   o rótulo encolhe com "…"; o horário fica. */
+.bloco.medio, .bloco.curto { display: flex; align-items: center; gap: 4px; padding-top: 0; padding-bottom: 0; container-type: inline-size; }
+.bloco.medio .rotulo, .bloco.curto .rotulo { flex: 1 1 auto; min-width: 0; }
+.bloco.medio .faixa, .bloco.curto .faixa { flex: 0 0 auto; max-width: 100%; margin-left: auto; font-size: 0.88em; }
+/* Coluna estreita: a área de texto do bloco (sem as bordas e o respiro) com
+   até 7.5rem (120px), ou seja, coluna de até uns 143px, o que dá janela de 768
+   a uns 980px. No bloco de uma linha:
+   - ocupado: o horário tem a prioridade, e "Ocupado" sai inteiro em vez de
+     virar "O…";
+   - reunião em destaque: os DOIS ficam, o título encolhe com "…" e o horário
+     fica inteiro à direita (pedido do Marco, 15/10/2026: "o horário sempre
+     aparece"; antes saía o horário);
+   - lado a lado (pista) curto: só o horário, como no ocupado (nas pistas o
+     horário nunca é cortado). */
+@container (max-width: 7.5rem) {
+  .bloco.medio:not(.lado):not(.destaque) .rotulo, .bloco.curto:not(.destaque) .rotulo, .bloco.lado.curto .rotulo { display: none; }
+}
+/* Bloco muito baixo (15 a 20 minutos): tudo menor; o horário continua à vista. */
+.bloco.curto { padding: 0 4px; font-size: 0.625rem; line-height: 1; }
+.bloco.curto .faixa { font-size: 1em; }
+/* Lado a lado (pista estreita): o horário NUNCA é cortado. Ele vem compacto
+   ("15:30-16:00", agenda.js), pequeno (10px) e numa linha própria, e pode
+   quebrar depois do hífen numa pista estreita (2 pistas a 768px); o título
+   encolhe com "…". O agenda.js escolhe o tamanho pela altura contando o
+   horário em duas linhas (C.blockSize/C.titleLines):
+   - alto (48 minutos ou mais): título em cima (em quantas linhas couberem) e
+     o horário embaixo;
+   - medio: o horário vem antes no DOM, e a coluna invertida com quebra
+     desenha o título em cima dele SÓ se o título couber inteiro; se não, o
+     título vai para uma segunda coluna, fora do bloco (overflow; o espaço de
+     4px entre as colunas garante que nem uma lasca dele apareça na borda), e
+     fica só o horário. Assim 42 minutos ou mais mostram os dois; 30 minutos,
+     ao menos o horário inteiro;
+   - curto (até uns 20 minutos): uma linha só, com o horário; numa pista
+     estreita demais para ele inteiro, só o início (@container abaixo). */
+.bloco.lado { padding: 1px 2px; }
+.bloco.lado .faixa { font-size: 0.625rem; line-height: 1; white-space: normal; }
+.bloco.lado.medio {
+  flex-direction: column-reverse; flex-wrap: wrap;
+  justify-content: flex-end; align-content: flex-start; align-items: stretch;
+  gap: 0 4px; padding: 0 2px; font-size: 0.625rem; line-height: 1;
+}
+.bloco.lado.medio .rotulo, .bloco.lado.medio .faixa { flex: 0 0 auto; width: 100%; max-width: 100%; margin-left: 0; }
+.bloco.lado.curto { padding: 0 2px; }
+.bloco.lado.curto .faixa { white-space: nowrap; }
+/* Bloco curto lado a lado (uma linha) numa pista em que "15:30-16:00" (62px a
+   10px) não cabe: mostra só o início, "15:30", inteiro, em vez de "15:3…". A
+   dica do mouse continua com o horário todo. Com 2 pistas isso acontece até
+   uns 1040px de janela; a 1280px o horário cabe inteiro. */
+@container (max-width: 3.9rem) {
+  .bloco.lado.curto .faixa .fim { display: none; }
+}
+.dia-col.fds .bloco { opacity: 0.8; }
+/* Compromisso que já passou: cinza bem clarinho, quase imperceptível (pedido do Marco). */
+.bloco.bloco-passado,
+.dia-col.fds .bloco.bloco-passado { opacity: 1; background: var(--ocupado-passado); border-color: transparent; color: var(--ocupado-passado-texto); }
+
+/* Reunião em destaque (NASA): azul, título em negrito e o horário real.
+   Sobreposta a um ocupado ou a outra reunião, fica ao lado (pistas); bloco baixo
+   segue a regra de cima (título à esquerda, horário à direita, numa linha). */
+.bloco.destaque { background: var(--destaque); border-color: var(--destaque-borda); color: var(--destaque-texto); }
+.bloco.destaque .rotulo { font-weight: 700; }
+.bloco.destaque .faixa { opacity: 0.9; }
+/* Bloco alto: o título quebra em até --linhas linhas (calculado pela altura). */
+.bloco.destaque.alto .rotulo {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--linhas, 2);
+  overflow: hidden;
+}
+.dia-col.fds .bloco.destaque { opacity: 1; }
+/* Dia bloqueado inteiro: a reunião fica por cima das listras. */
+.dia-col.indisp .bloco.destaque { z-index: 3; }
+/* Call da NASA de meia hora sozinha na coluna: título inteiro em cima e o
+   horário pequeno embaixo (numa linha só o título virava "CEAP + N…"). Sem
+   respiro em cima e embaixo: as duas linhas (11.4 + 9.3px) e as bordas cabem
+   inteiras a partir de 22.7px (29 minutos). Mais baixo que isso o agenda.js
+   põe ' linha' (C.highlightLayout) e o bloco fica numa linha só, como o
+   ocupado: título com "…" à esquerda e o horário à direita. */
+.bloco.destaque.medio:not(.lado):not(.linha) { flex-direction: column; align-items: stretch; justify-content: center; gap: 0; padding-top: 0; padding-bottom: 0; }
+.bloco.destaque.medio:not(.lado):not(.linha) .rotulo { flex: 0 0 auto; font-size: 0.68rem; line-height: 1.05; }
+.bloco.destaque.medio:not(.lado):not(.linha) .faixa { margin-left: 0; font-size: 0.58rem; line-height: 1; }
+/* Call da NASA de uma linha só (15-28 min, ' curto' e ' medio linha'): as letras da de 29 min
+   (título 0.68rem, horário 0.58rem), para a de 28 não sair maior que a de 29 e sobrar mais
+   lugar ao título. Na coluna estreita (abaixo) o horário fica compacto. */
+.bloco.destaque.medio.linha .rotulo { font-size: 0.68rem; }
+.bloco.destaque.medio.linha .faixa, .bloco.destaque.curto:not(.lado) .faixa { font-size: 0.58rem; }
+/* Coluna estreita (janela de 768 a uns 980px): "09:45 a 10:08" toma uns 70 dos 85px e o
+   título virava uma letra. Na call de uma linha o " a " vira "-" ("09:45-10:08", o mesmo
+   horário compacto das pistas), o que devolve uns 15px ao título. O texto do horário no
+   HTML não muda (o .sep só some da tela; o "-" é desenhado pelo CSS). */
+@container (max-width: 7.5rem) {
+  .bloco.destaque.medio.linha .faixa .sep, .bloco.destaque.curto:not(.lado) .faixa .sep { font-size: 0; }
+  .bloco.destaque.medio.linha .faixa .sep::before, .bloco.destaque.curto:not(.lado) .faixa .sep::before { content: "-"; font-size: 0.58rem; }
+}
+/* Call da NASA de 59 a 63 min sozinha: o título usa até 2 linhas antes do
+   "…" (numa linha só, "Evyron + NASA Space Apps" virava "Evyron + NASA Space …")
+   e o horário vem numa linha embaixo. */
+.bloco.destaque:not(.medio):not(.curto):not(.alto):not(.lado):not(.justo) .rotulo {
+  white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  font-size: 0.72rem; line-height: 1.12;
+}
+.bloco.destaque:not(.medio):not(.curto):not(.alto):not(.lado):not(.justo) .faixa { font-size: 0.68rem; }
+/* Call da NASA de uns 43 a 58 min sozinha (' justo'): título em 2 linhas e
+   horário embaixo não cabem (era o "Aqua Capital + Nasa Space Apps" de 45 min
+   sem horário). O horário vai para o canto direito da 2ª linha e o título
+   encolhe com "…" antes dele. Como funciona:
+   - .texto corta em 2 linhas (-webkit-line-clamp, que põe o "…") e nunca
+     passa de 2 linhas de altura;
+   - .fluxo, dentro dele, é um bloco comum: no WebKit (Safari) um float filho
+     direto do -webkit-box deixa de flutuar;
+   - um float vazio de 1 linha (+1px: sem isso o arredondamento do Chrome faz
+     o horário encostar na 1ª linha e estreitá-la) empurra o horário, que
+     flutua à direita, para a 2ª linha;
+   - a margem de 12px é o lugar do "…": Chrome e Safari desenham as
+     reticências além do fim da linha, por cima do que vem depois;
+   - overflow-wrap: anywhere deixa quebrar a palavra que não cabe ao lado do
+     horário (sem isso ela descia para uma 3ª linha, escondida, e a 2ª ficava
+     só com o horário). Isso vale no Chrome e no Safari; o Firefox desce a
+     palavra mesmo assim, então nele (e só nele, @supports abaixo) entra a
+     hifenização em português ("Planejamento estra- / tégico… 16:47 a 17:30").
+     Uma palavra enorme sem hífen possível ainda deixa, no Firefox, a 2ª linha
+     só com o horário (sem o "…"); o horário aparece do mesmo jeito. */
+.bloco.destaque.justo { container-type: inline-size; }
+.bloco.justo .texto {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; max-height: calc(2 * 0.72rem * 1.12);
+  font-size: 0.72rem; line-height: 1.12; font-weight: 700;
+}
+.bloco.justo .fluxo { display: block; overflow-wrap: anywhere; }
+@supports (-moz-appearance: none) {
+  .bloco.justo .fluxo { -webkit-hyphens: auto; hyphens: auto; }
+}
+.bloco.justo .fluxo::before { content: ''; float: right; width: 0; height: calc(0.72rem * 1.12 + 1px); }
+.bloco.justo .rotulo { display: inline; white-space: normal; overflow: visible; }
+.bloco.justo .faixa { float: right; clear: right; max-width: 100%; margin-left: 12px; font-size: 0.68rem; line-height: 11px; font-weight: 400; }
+/* Coluna estreita (texto do bloco até 100px: janela até uns 860px): ao lado
+   do horário não sobra lugar nem para uma letra e o "…". O título fica numa
+   linha só, com "…", e o horário embaixo, à direita. .texto vira bloco comum:
+   dentro do -webkit-box o Safari cortava o título sem pôr o "…". */
+@container (max-width: 6.25rem) {
+  .bloco.justo .texto { display: block; }
+  .bloco.justo .fluxo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bloco.justo .rotulo { white-space: nowrap; }
+}
+/* Filtro ligado: setas e campo de data escondidos de verdade (o display do .btn
+   e do .ir venceria o [hidden] padrão do navegador). */
+.nav [hidden], .nav .ir[hidden] { display: none !important; }
+
+/* Já passou: azul bem clarinho, quase apagado, como o cinza do ocupado passado. */
+.bloco.destaque.destaque-passado { background: var(--destaque-passado); border-color: transparent; color: var(--destaque-passado-texto); }
+
+.passado { position: absolute; left: 0; right: 0; z-index: 2; background: var(--passado); pointer-events: none; }
+
+.agora { position: absolute; left: 0; right: 0; height: 2px; margin-top: -1px; background: var(--agora); z-index: 4; pointer-events: none; }
+.agora::before {
+  content: ""; position: absolute; left: -4px; top: -3px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--agora);
+}
+
+.cobre {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: 28px 6px 0;
+  text-align: center;
+  font-size: 0.78rem; line-height: 1.3;
+  color: var(--texto-suave);
+}
+.cobre-fora { background: repeating-linear-gradient(135deg, var(--fora-listra) 0 6px, transparent 6px 12px); }
+.cobre-indisp {
+  background: repeating-linear-gradient(135deg, var(--ocupado) 0 8px, var(--ocupado-2) 8px 16px);
+  color: var(--ocupado-texto);
+  font-weight: 600;
+}
+.cobre span { background: var(--superficie); border-radius: 6px; padding: 3px 6px; border: 1px solid var(--borda); }
+.cobre-indisp span { background: var(--ocupado); border-color: var(--ocupado-borda); }
+
+/* ------------------------------------------------- visão lista (celular) */
+
+.lista-dias { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+/* Nova semana no celular: entre o cartão do sábado e o da segunda (com filtro,
+   entre dias de semanas diferentes), "Nova semana" entre duas barras âmbar
+   grossas, a mesma cor da barra da grade. */
+.semana-sep {
+  display: flex; align-items: center; gap: 10px;
+  margin: 2px 0;
+  color: var(--nova-semana-texto);
+  font-size: 0.82rem; font-weight: 700; line-height: 1.2;
+  white-space: nowrap;
+}
+.semana-sep::before, .semana-sep::after {
+  content: ""; flex: 1 1 0; min-width: 16px; height: 4px; border-radius: 2px;
+  background: var(--nova-semana);
+}
+
+.cartao {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 12px 14px;
+  background: var(--superficie);
+  min-width: 0;
+}
+.cartao.hoje { border-color: var(--acento); box-shadow: inset 0 0 0 1px var(--acento); background: var(--hoje-fundo); }
+.cartao.fds { background: var(--fds-fundo); }
+.cartao.fora { background: repeating-linear-gradient(135deg, var(--fora-listra) 0 6px, transparent 6px 12px), var(--superficie); }
+.cartao.passou h3 { color: var(--texto-suave); }
+
+.cartao h3 { margin: 0 0 8px; font-size: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.selo { font-size: 0.72rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--acento); color: var(--acento-texto); }
+
+.nota { margin: 0 0 6px; color: var(--texto-suave); font-size: 0.9rem; }
+.nota:last-child { margin-bottom: 0; }
+.nota-indisp {
+  display: inline-block; padding: 2px 10px; border-radius: 6px;
+  /* Mesmas listras da grade. */
+  background: repeating-linear-gradient(135deg, var(--ocupado) 0 8px, var(--ocupado-2) 8px 16px);
+  border: 1px solid var(--ocupado-borda);
+  color: var(--ocupado-texto); font-weight: 600;
+}
+
+.itens { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+
+.item {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px;
+  font-variant-numeric: tabular-nums;
+  border-radius: 8px;
+}
+.item .tag {
+  display: inline-block; min-width: 5.6em;
+  padding: 1px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem; font-weight: 700; text-align: center;
+}
+.item-ocupado .tag { background: var(--ocupado); color: var(--ocupado-texto); }
+.item-livre .tag { background: var(--livre-fundo); color: var(--livre); border: 1px solid var(--livre-borda); }
+/* No celular, o que já passou também fica quase apagado: contraste baixo DE
+   PROPÓSITO (pedido do Marco, não importa mais). */
+.item-passado .faixa { color: var(--ocupado-passado-texto); }
+.item.item-passado .tag { background: var(--ocupado-passado); color: var(--ocupado-passado-texto); border: 1px solid transparent; }
+/* Reunião em destaque no celular: etiqueta azul com o nome, horário e título. */
+.item-destaque .tag { background: var(--destaque); color: var(--destaque-texto); border: 1px solid var(--destaque); }
+.item-destaque .titulo { flex: 1 1 10em; min-width: 0; font-weight: 600; }
+.item.item-destaque.item-passado .tag { background: var(--destaque-passado); color: var(--destaque-passado-texto); border-color: transparent; }
+.item-destaque.item-passado .faixa, .item-destaque.item-passado .titulo { color: var(--destaque-passado-texto); }
+
+/* Filtro ligado sem nenhum dia com a pessoa. */
+.vazio { padding: 28px 16px; border: 1px dashed var(--borda); border-radius: var(--raio); text-align: center; color: var(--texto-suave); }
+.vazio p { margin: 0; }
+.vazio .vazio-titulo { margin-bottom: 4px; color: var(--texto); font-weight: 600; }
+
+/* Sem rodapé: só um respiro depois da agenda. */
+main.wrap { padding-bottom: 36px; }
+
+@media (max-width: 480px) {
+  .topo { padding-top: 12px; }
+  .painel { padding: 14px; }
+  .nav { align-items: stretch; }
+  .nav-botoes { width: 100%; }
+  .nav-botoes .btn { flex: 1 1 0; padding: 0 8px; }
+  .nav-botoes .btn-seta { padding-bottom: 3px; }
+  #semana-titulo { flex: 1 1 100%; margin: 2px 0 0; }
+  .topo-linha { flex-wrap: wrap; }
+  .tag-atualizada { font-size: 0.98rem; min-height: 36px; padding: 0 12px; }
+  .ir { width: 100%; }
+  .ir input { width: 100%; min-width: 0; }
+}
+
+/* Publicação: o GitHub Pages leva ~1 min para servir uma versão nova (a CDN ignora ?t=);
+   o app só mostra o tique verde quando o site já devolve o arquivo novo. */

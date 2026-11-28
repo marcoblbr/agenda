@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/img/icone-64.png?v=fb8cd75b">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/img/icone-180.png?v=2dc8407e">
+  <title>Agenda do Marco</title>
+  <link rel="stylesheet" href="assets/css/agenda.css?v=15ff8ead">
+  <script src="assets/js/agenda.js?v=141a06d8" defer></script>
+</head>
+<body>
+  <!-- Portão: só o campo da senha. A agenda só existe na tela depois de decifrada
+       com a senha; com senha salva, o agenda.js mostra direto a grade vazia. -->
+  <main id="portao" class="portao">
+    <div class="portao-caixa">
+      <noscript><p class="portao-nota">Esta página precisa de JavaScript para abrir a agenda.</p></noscript>
+      <form id="form-senha" class="form-senha" novalidate hidden>
+        <div class="senha-linha">
+          <input type="password" id="f-senha" name="senha" placeholder="Senha" aria-label="Senha" autocomplete="current-password"
+                 autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="senha-erro">
+          <button type="button" class="btn" id="btn-mostrar" aria-controls="f-senha" aria-label="Mostrar senha">Mostrar</button>
+        </div>
+        <button type="submit" class="btn btn-primario btn-bloco" id="btn-entrar">Entrar</button>
+        <p id="senha-erro" class="senha-erro" aria-live="assertive" aria-atomic="true"></p>
+      </form>
+      <div id="portao-falha" class="erro" role="alert" hidden></div>
+    </div>
+  </main>
+
+  <div id="app" hidden>
+    <a class="pular" href="#agenda">Pular para a agenda</a>
+
+    <header class="topo">
+      <div class="wrap">
+        <div class="topo-linha">
+          <div class="marca">
+            <img class="marca-icone" src="assets/img/icone-180.png?v=2dc8407e" alt="" width="30" height="30">
+            <div class="marca-texto">
+              <h1 id="titulo" tabindex="-1">Agenda do Marco</h1>
+              <button type="button" class="btn btn-recarregar" id="btn-recarregar" aria-label="Recarregar a agenda" title="Recarregar">↻</button>
+              <span id="fuso" class="fuso">Horário de Brasília (GMT-3)</span>
+            </div>
+          </div>
+          <div class="topo-acoes">
+            <span id="atualizada" class="tag-atualizada">Carregando…</span>
+            <button type="button" class="btn btn-pequeno" id="btn-sair" aria-label="Sair e esquecer a senha salva neste navegador">Sair</button>
+          </div>
+        </div>
+        <p id="aviso-antigo" class="aviso" hidden>Atenção: esta agenda não é atualizada há mais de 24 horas. Os horários podem ter mudado.</p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section id="agenda" class="painel" aria-labelledby="semana-titulo" tabindex="-1">
+        <div class="nav">
+          <div class="nav-botoes">
+            <button type="button" class="btn btn-seta" id="btn-anterior" aria-label="7 dias antes" disabled>‹</button>
+            <button type="button" class="btn" id="btn-hoje" disabled>Hoje</button>
+            <button type="button" class="btn btn-seta" id="btn-proxima" aria-label="7 dias depois" disabled>›</button>
+            <h2 id="semana-titulo">Semana</h2>
+          </div>
+          <div class="ir">
+            <input type="date" id="f-ir" aria-label="Começar a tabela nesta data" disabled>
+          </div>
+        </div>
+        <div id="semana" class="semana"></div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
